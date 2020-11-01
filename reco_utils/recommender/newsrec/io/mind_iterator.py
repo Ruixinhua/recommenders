@@ -171,8 +171,9 @@ class MINDIterator(object):
                 # state = np.random.get_state()
                 # np.random.shuffle(label)
                 impression = {"labels": label, "impression_index_batch": impr_index, "user_index_batch": user_index}
+                n = [p] + newsample(negs, self.npratio)
                 for attr in self.news_index_matrix.keys():
-                    candidate_index = self.news_index_matrix[attr][[p] + newsample(negs, self.npratio)]
+                    candidate_index = self.news_index_matrix[attr][n]
                     clicked_index = self.news_index_matrix[attr][self.histories[line]]
                     attr = attr.replace("news_", "").replace("index", "batch")
                     # keep the same random state as label shuffle

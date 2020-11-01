@@ -7,7 +7,7 @@ from reco_utils.recommender.newsrec.newsrec_utils import get_mind_data_set
 
 epochs = 8
 seed = 42
-MIND_type = 'small'
+MIND_type = 'demo'
 data_root_path = 'C:\\Users\\Rui\\Documents\\Phd_research_RS\\baseline\\recommenders\\mind_dataset'
 data_path = f'{data_root_path}\\{MIND_type}'
 
@@ -40,7 +40,7 @@ log_path = os.path.join(data_path, "log")
 os.makedirs(log_path, exist_ok=True)
 log_file = os.path.join(log_path, "log.txt")
 # pick attribute from title, entity, vert, subvert, abstract, and define their size
-news_attr = {"title": 30, "entity": 5}
+news_attr = {"title": 30, "entity": 30}
 model_type = "nrms_entity"
 hparams = prepare_hparams(yaml_file, wordEmb_file=wordEmb_file, wordDict_file=wordDict_file, model_type=model_type,
                           epochs=epochs, show_step=10, userDict_file=userDict_file, log_file=log_file,
