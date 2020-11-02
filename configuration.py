@@ -7,7 +7,7 @@ from reco_utils.recommender.newsrec.newsrec_utils import get_mind_data_set
 
 epochs = 8
 seed = 42
-MIND_type = 'demo'
+MIND_type = 'large'
 data_root_path = 'C:\\Users\\Rui\\Documents\\Phd_research_RS\\baseline\\recommenders\\mind_dataset'
 data_path = f'{data_root_path}\\{MIND_type}'
 
@@ -36,20 +36,27 @@ if not os.path.exists(yaml_file):
     utils_url = r'https://recodatasets.blob.core.windows.net/newsrec/'
     download_deeprec_resources(utils_url, os.path.join(data_root_path, 'utils'), mind_utils)
 
-log_path = os.path.join(data_path, "log")
-os.makedirs(log_path, exist_ok=True)
-log_file = os.path.join(log_path, "log.txt")
-# pick attribute from title, entity, vert, subvert, abstract, and define their size
-news_attr = {"title": 30, "entity": 30}
-model_type = "nrms_entity"
-hparams = prepare_hparams(yaml_file, wordEmb_file=wordEmb_file, wordDict_file=wordDict_file, model_type=model_type,
-                          epochs=epochs, show_step=10, userDict_file=userDict_file, log_file=log_file,
-                          news_attr=news_attr)
-print(hparams.to_string())
-if hparams.model_type == "nrms":
-    from reco_utils.recommender.newsrec.trainers.base_trainer import BaseTrainer
-    # set trainer
-    trainer = BaseTrainer(hparams, MINDIterator, seed)
-elif hparams.model_type == "nrms_entity":
-    from reco_utils.recommender.newsrec.trainers.entity_trainer import EntityTrainer
-    trainer = EntityTrainer(hparams, MINDIterator, seed)
+
+def load_trainer(yaml_name=None, log_file=None):
+    if yaml_name:
+        yaml_path = os.path.join(data_root_path, "utils", yaml_name)
+    else:
+        yaml_path = yaml_file
+    log_path = os.path.join(data_path, "log")
+    os.makedirs(log_path, exist_ok=True)
+
+    hparams = prepare_hparams(yaml_path, wordEmb_file=wordEmb_file, wordDict_file=wordDict_file,
+                              epochs=epochs, show_step=10, userDict_file=userDict_file)
+    # set up log file
+    log_file = log_file if log_file else hparams.log_file
+    log_file = os.path.join(log_path, log_file)
+    hparams.log_file = log_file
+    print(hparams.to_string())
+    if hparams.model_type == "nrms_entity":
+        from reco_utils.recommender.newsrec.trainers.entity_trainer import EntityTrainer
+        trainer = EntityTrainer(hparams, MINDIterator, seed)
+    else:
+        from reco_utils.recommender.newsrec.trainers.base_trainer import BaseTrainer
+        # set trainer
+        trainer = BaseTrainer(hparams, MINDIterator, seed)
+    return trainer

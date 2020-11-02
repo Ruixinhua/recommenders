@@ -2,10 +2,12 @@ import os
 import torch
 # set up configuration
 from configuration import (
-    trainer, data_path, train_news_file, train_behaviors_file, valid_news_file, valid_behaviors_file, MIND_type
+    data_path, train_news_file, train_behaviors_file, valid_news_file, valid_behaviors_file, MIND_type, load_trainer
 )
 from utils import tools
 
+yaml_name = r"nrms_entity.yaml"
+trainer = load_trainer(yaml_name)
 # save model
 model_path = os.path.join(data_path, "checkpoint")
 os.makedirs(model_path, exist_ok=True)

@@ -102,7 +102,7 @@ def check_nn_config(f_config):
         "data_format",
         "dropout",
     ]
-    if f_config["model_type"] in ["nrms", "NRMS"]:
+    if f_config["model_type"] in ["nrms", "NRMS", "nrms_entity"]:
         required_parameters = shared_parameters + [
             # nrms
             "head_num",
@@ -248,7 +248,7 @@ def prepare_hparams(yaml_file=None, **kwargs):
 
     config.update(kwargs)
 
-    # check_nn_config(config)
+    check_nn_config(config)
     return create_hparams(config)
 
 
