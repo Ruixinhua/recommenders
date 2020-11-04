@@ -4,7 +4,7 @@ data:
   data_format: news
   npratio: 4
   news_attr:
-    - title: 30
+    title: 30
   
 info:
   metrics:
@@ -21,6 +21,7 @@ model:
   head_num: 20
   head_dim: 20
   model_type: nrms
+  trainer: ""
 
 train:
   batch_size: 32

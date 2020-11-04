@@ -62,8 +62,8 @@ class BaseTrainer:
         self.hparams = hparams
         self.support_quick_scoring = hparams.support_quick_scoring
         self.log_file = open(hparams.log_file, "a")
-
-        self.model = tools.get_model_class(hparams.model_type, **{"hparams": hparams}).to(tools.get_device())
+        model_type = f"{hparams.model_type}_{hparams.trainer}"
+        self.model = tools.get_model_class(model_type, **{"hparams": hparams}).to(tools.get_device())
         self.best_model = self.model
 
         self.loss = self._get_loss()

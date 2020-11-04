@@ -7,7 +7,7 @@ from reco_utils.recommender.newsrec.newsrec_utils import get_mind_data_set
 
 epochs = 8
 seed = 42
-MIND_type = 'large'
+MIND_type = 'small'
 data_root_path = 'C:\\Users\\Rui\\Documents\\Phd_research_RS\\baseline\\recommenders\\mind_dataset'
 data_path = f'{data_root_path}\\{MIND_type}'
 
@@ -52,9 +52,12 @@ def load_trainer(yaml_name=None, log_file=None):
     log_file = os.path.join(log_path, log_file)
     hparams.log_file = log_file
     print(hparams.to_string())
-    if hparams.model_type == "nrms_entity":
+    if hparams.trainer == "entity":
         from reco_utils.recommender.newsrec.trainers.entity_trainer import EntityTrainer
         trainer = EntityTrainer(hparams, MINDIterator, seed)
+    elif hparams.trainer == "body":
+        from reco_utils.recommender.newsrec.trainers.body_trainer import BodyTrainer
+        trainer = BodyTrainer(hparams, MINDIterator, seed)
     else:
         from reco_utils.recommender.newsrec.trainers.base_trainer import BaseTrainer
         # set trainer

@@ -6,8 +6,8 @@ from configuration import (
 )
 from utils import tools
 
-yaml_name = r"nrms_entity.yaml"
-trainer = load_trainer(yaml_name)
+yaml_name = r"nrms_body.yaml"
+trainer = load_trainer(yaml_name, log_file="entity_5.txt")
 # save model
 model_path = os.path.join(data_path, "checkpoint")
 os.makedirs(model_path, exist_ok=True)

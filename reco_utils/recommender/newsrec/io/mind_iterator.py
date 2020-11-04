@@ -65,7 +65,7 @@ class MINDIterator(object):
 
     def init_matrix(self, data, shape):
         matrix = np.zeros(shape, dtype="int32")
-        for index in range(matrix.shape[0]):
+        for index in range(min(matrix.shape[0], len(data))):
             content = data[index]
             for word_index in range(min(len(content), matrix.shape[1])):
                 if content[word_index] in self.word_dict:
@@ -83,6 +83,11 @@ class MINDIterator(object):
         """
 
         self.nid2index = {}
+        articles = None
+        if hasattr(self.hparams, "article_size"):
+            import os
+            articles = json.load(open(os.path.join(os.path.dirname(news_file), "msn.json")))
+            self.news_body_index = [np.zeros(self.hparams.article_size * self.title_size)]
 
         with open(news_file, "r", encoding="utf-8") as rd:
             for line in rd:
@@ -93,9 +98,20 @@ class MINDIterator(object):
                 news_dict = {"title": title, "entity": entities, "vert": vert, "subvert": subvert, "abstract": ab}
                 if nid in self.nid2index:
                     continue
+                # add news attribution
                 for attr in self.news.keys():
                     if attr in news_dict:
                         self.news[attr].append(word_tokenize(news_dict[attr]))
+
+                # add news body
+                if articles:
+                    news_id = url.split("/")[-1].split(".")[0]
+                    article_matrix = []
+                    for sentence in articles[news_id]:
+                        if news_id in articles:
+                            article_matrix.append(word_tokenize(sentence))
+                    article_matrix = self.init_matrix(article_matrix, (self.hparams.article_size, self.title_size))
+                    self.news_body_index.append(article_matrix.reshape(-1))
                 self.nid2index[nid] = len(self.nid2index) + 1
 
         self.news_index_matrix = {
@@ -103,8 +119,8 @@ class MINDIterator(object):
                                                    (len(self.news[attr]), self.hparams.news_attr[attr]))  # matrix shape
             for attr in self.news.keys()
         }
-        self.news_title_index = self.init_matrix(self.news["title"], (len(self.news["title"]), self.title_size))
-        # self.news_entity_index = self.init_matrix(self.news["entity"], (len(self.news["entity"]), self.title_size))
+        if hasattr(self, "news_body_index"):
+            self.news_index_matrix["news_body_index"] = np.asarray(self.news_body_index)
 
     def _init_behaviors(self, behaviors_file, test_set=False):
         """ init behavior logs given behaviors file.
@@ -315,7 +331,7 @@ class MINDIterator(object):
         news_dict = {k: [] for k in keys}
         cnt = 0
 
-        for index in range(len(self.news_title_index)):
+        for index in range(len(self.news_index_matrix["news_title_index"])):
             news_dict["news_index_batch"].append(index)
             for attr, news_index in self.news_index_matrix.items():
                 attr = f"candidate_{attr.replace('news_', '').replace('index', 'batch')}"

@@ -12,7 +12,7 @@ seed = 42
 torch.manual_seed(seed)
 cudnn.benchmark = False
 cudnn.deterministic = True
-name_mapping = {"nrms": "NRMSModel", "nrms_entity": "NRMSModelEntity"}
+name_mapping = {"nrms": "NRMSModel", "nrms_entity": "NRMSModelEntity", "nrms_body": "NRMSModelBody"}
 
 
 def load_config(filename):
