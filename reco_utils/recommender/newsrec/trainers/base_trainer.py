@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as opt
 from torch.backends import cudnn
+from torch.nn import DataParallel
 
 from reco_utils.recommender.deeprec.deeprec_utils import cal_metric
 from tqdm import tqdm
@@ -41,7 +42,7 @@ class BaseTrainer:
     Basic class of models
     """
 
-    def __init__(self, hparams, iterator_creator, seed=42):
+    def __init__(self, hparams, iterator_creator, seed=42, parallel=False):
         """Initializing the trainer. Create common logics which are needed by all deeprec models, such as loss function,
         parameter set.
 
@@ -60,10 +61,15 @@ class BaseTrainer:
         self.test_iterator = iterator_creator(hparams, col_spliter="\t")
 
         self.hparams = hparams
+        self.device = tools.get_device(hparams.device_id)
         self.support_quick_scoring = hparams.support_quick_scoring
         self.log_file = open(hparams.log_file, "a")
         model_type = f"{hparams.model_type}_{hparams.trainer}"
-        self.model = tools.get_model_class(model_type, **{"hparams": hparams}).to(tools.get_device())
+        model_type = "nrms" if hparams.trainer == "" else model_type
+        if parallel:
+            self.model = DataParallel(tools.get_model_class(model_type, **{"hparams": hparams}), device_ids=[0, 1])
+        else:
+            self.model = tools.get_model_class(model_type, **{"hparams": hparams}).to(self.device)
         self.best_model = self.model
 
         self.loss = self._get_loss()
@@ -84,11 +90,11 @@ class BaseTrainer:
             array: labels
         """
         input_feat = [
-            torch.tensor(batch_data["clicked_title_batch"]).to(tools.get_device()),
-            torch.tensor(batch_data["candidate_title_batch"]).to(tools.get_device()),
+            torch.tensor(batch_data["clicked_title_batch"]).to(self.device),
+            torch.tensor(batch_data["candidate_title_batch"]).to(self.device),
         ]
         input_label = batch_data["labels"]
-        return input_feat, torch.tensor(input_label).to(tools.get_device())
+        return input_feat, torch.tensor(input_label).to(self.device)
 
     def _get_user_feature_from_iter(self, batch_data):
         """ get input of user encoder
@@ -98,7 +104,7 @@ class BaseTrainer:
         Returns:
             array: input user feature (clicked title batch)
         """
-        return torch.tensor(batch_data["clicked_title_batch"]).to(tools.get_device())
+        return torch.tensor(batch_data["clicked_title_batch"]).to(self.device)
 
     def _get_news_feature_from_iter(self, batch_data):
         """ get input of news encoder
@@ -108,7 +114,7 @@ class BaseTrainer:
         Returns:
             array: input news feature (candidate title batch)
         """
-        return torch.tensor(batch_data["candidate_title_batch"]).to(tools.get_device())
+        return torch.tensor(batch_data["candidate_title_batch"]).to(self.device)
 
     def _get_loss(self):
         """Make loss function, consists of data loss and regularization loss

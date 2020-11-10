@@ -1,4 +1,5 @@
 import os
+import argparse
 import torch
 import numpy as np
 import time
@@ -24,18 +25,20 @@ def write_prediction(imp_indexes, imp_preds):
             f.write(" ".join([str(impr_index), pred_rank]) + "\n")
 
 
+parse = argparse.ArgumentParser(description="Prediction process")
+parse.add_argument("--configure", "-c", help="yaml file", dest="config", metavar="TEXT", default=r"nrms.yaml")
+args = parse.parse_args()
 start_time = time.time()
 inference_dir = f"{data_path}/prediction"
 os.makedirs(inference_dir, exist_ok=True)
 # set trainer
-yaml_name = r"nrms.yaml"
-trainer = load_trainer(yaml_name)
+trainer = load_trainer(args.config)
 # load model
-model_path = os.path.join(data_path, "checkpoint", f"best_model_nrms.pth")
+model_path = os.path.join(data_path, "checkpoint", f"best_model.pth")
 state = torch.load(model_path)
 trainer.model.load_state_dict(state)
 with torch.no_grad():
-    tools.print_log(trainer.run_eval(valid_news_file, valid_behaviors_file))
-    # group_impr_indexes, group_preds = trainer.run_fast_eval(test_news_file, test_behaviors_file, test_set=True)
-# write_prediction(group_impr_indexes, group_preds)
+    # tools.print_log(trainer.run_eval(valid_news_file, valid_behaviors_file))
+    group_impr_indexes, group_preds = trainer.run_fast_eval(test_news_file, test_behaviors_file, test_set=True)
+write_prediction(group_impr_indexes, group_preds)
 print(f"inference on category: cost: {time.time() - start_time}s.")

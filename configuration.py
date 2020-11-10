@@ -7,7 +7,7 @@ from reco_utils.recommender.newsrec.newsrec_utils import get_mind_data_set
 
 epochs = 8
 seed = 42
-MIND_type = 'small'
+MIND_type = 'large'
 data_root_path = 'C:\\Users\\Rui\\Documents\\Phd_research_RS\\baseline\\recommenders\\mind_dataset'
 data_path = f'{data_root_path}\\{MIND_type}'
 
@@ -31,13 +31,15 @@ if not os.path.exists(train_news_file):
 
 if not os.path.exists(valid_news_file):
     download_deeprec_resources(mind_url, os.path.join(data_path, 'valid'), mind_dev_dataset)
-
+if MIND_type == "large":
+    if not os.path.exists(test_news_file):
+        download_deeprec_resources(mind_url, os.path.join(data_path, 'test'), mind_dev_dataset)
 if not os.path.exists(yaml_file):
     utils_url = r'https://recodatasets.blob.core.windows.net/newsrec/'
     download_deeprec_resources(utils_url, os.path.join(data_root_path, 'utils'), mind_utils)
 
 
-def load_trainer(yaml_name=None, log_file=None):
+def load_trainer(yaml_name=None, log_file=None, device_id=0):
     if yaml_name:
         yaml_path = os.path.join(data_root_path, "utils", yaml_name)
     else:
@@ -45,7 +47,7 @@ def load_trainer(yaml_name=None, log_file=None):
     log_path = os.path.join(data_path, "log")
     os.makedirs(log_path, exist_ok=True)
 
-    hparams = prepare_hparams(yaml_path, wordEmb_file=wordEmb_file, wordDict_file=wordDict_file,
+    hparams = prepare_hparams(yaml_path, wordEmb_file=wordEmb_file, wordDict_file=wordDict_file, device_id=device_id,
                               epochs=epochs, show_step=10, userDict_file=userDict_file)
     # set up log file
     log_file = log_file if log_file else hparams.log_file

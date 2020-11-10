@@ -26,14 +26,13 @@ class EntityTrainer(BaseTrainer):
             array: labels
         """
         keys = ["clicked", "candidate"]
-        device = tools.get_device()
         input_feat = [
             torch.tensor(np.concatenate([batch_data[f"{k}_title_batch"],
-                                        batch_data[f"{k}_entity_batch"]], axis=-1)).to(device)
+                                        batch_data[f"{k}_entity_batch"]], axis=-1)).to(self.device)
             for k in keys
         ]
         input_label = batch_data["labels"]
-        return input_feat, torch.tensor(input_label).to(tools.get_device())
+        return input_feat, torch.tensor(input_label).to(self.device)
 
     def _get_user_feature_from_iter(self, batch_data):
         """ get input of user encoder
@@ -45,7 +44,7 @@ class EntityTrainer(BaseTrainer):
             array: input user feature (clicked title batch)
         """
         return torch.tensor(np.concatenate([batch_data["clicked_title_batch"],
-                                            batch_data["clicked_entity_batch"]], axis=-1)).to(tools.get_device())
+                                            batch_data["clicked_entity_batch"]], axis=-1)).to(self.device)
 
     def _get_news_feature_from_iter(self, batch_data):
         """ get input of news encoder
@@ -57,4 +56,4 @@ class EntityTrainer(BaseTrainer):
             array: input news feature (candidate title batch)
         """
         return torch.tensor(np.concatenate([batch_data["candidate_title_batch"],
-                                            batch_data["candidate_entity_batch"]], axis=-1)).to(tools.get_device())
+                                            batch_data["candidate_entity_batch"]], axis=-1)).to(self.device)
