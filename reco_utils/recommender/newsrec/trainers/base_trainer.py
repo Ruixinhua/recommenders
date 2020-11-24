@@ -64,12 +64,11 @@ class BaseTrainer:
         self.device = tools.get_device(hparams.device_id)
         self.support_quick_scoring = hparams.support_quick_scoring
         self.log_file = open(hparams.log_file, "a")
-        model_type = f"{hparams.model_type}_{hparams.trainer}"
-        model_type = "nrms" if hparams.trainer == "" else model_type
+        model_class = hparams.model_class
         if parallel:
-            self.model = DataParallel(tools.get_model_class(model_type, **{"hparams": hparams}), device_ids=[0, 1])
+            self.model = DataParallel(tools.get_model_class(model_class, **{"hparams": hparams}), device_ids=[0, 1])
         else:
-            self.model = tools.get_model_class(model_type, **{"hparams": hparams}).to(self.device)
+            self.model = tools.get_model_class(model_class, **{"hparams": hparams}).to(self.device)
         self.best_model = self.model
 
         self.loss = self._get_loss()
@@ -223,7 +222,7 @@ class BaseTrainer:
                             tools.print_log(f"save model state at {model_path}", file=self.log_file)
                     i += 1
 
-            tools.print_log(f"Epoch no: {epoch}, batch no: {step}.", file=self.log_file )
+            tools.print_log(f"Epoch no: {epoch}, batch no: {step}.", file=self.log_file)
 
             train_end = time.time()
             train_time = train_end - train_start

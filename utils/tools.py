@@ -12,7 +12,6 @@ seed = 42
 torch.manual_seed(seed)
 cudnn.benchmark = False
 cudnn.deterministic = True
-name_mapping = {"nrms": "NRMSModel", "nrms_entity": "NRMSModelEntity", "nrms_body": "NRMSModelBody"}
 
 
 def load_config(filename):
@@ -61,8 +60,16 @@ def get_device(i=0):
 
 
 def get_model_class(model_type="nrms", **model_params):
-    model_object = importlib.import_module(f"reco_utils.recommender.newsrec.models.{model_type}")
-    model_class = getattr(model_object, name_mapping[model_type])
+    module = importlib.import_module(f"reco_utils.recommender.newsrec.models.{model_type}")
+    model_names = [m for m in dir(module) if "Model" in m]
+    if len(model_names) > 1:
+        model_name = model_names[0]
+        for m in model_names:
+            if len(m) > len(model_name):
+                model_name = m
+    else:
+        model_name = model_names[0]
+    model_class = getattr(module, model_name)
     return model_class(**model_params)
 
 
