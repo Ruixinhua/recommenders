@@ -4,12 +4,7 @@ import torch
 import numpy as np
 import time
 from tqdm import tqdm
-
-from configuration import (
-    seed, data_path, test_news_file, test_behaviors_file, valid_news_file, valid_behaviors_file, load_trainer
-)
-
-from utils import tools
+from configuration import get_path, load_trainer, get_data_path
 
 
 def write_prediction(imp_indexes, imp_preds):
@@ -26,18 +21,24 @@ def write_prediction(imp_indexes, imp_preds):
 
 
 parse = argparse.ArgumentParser(description="Prediction process")
-parse.add_argument("--configure", "-c", help="yaml file", dest="config", metavar="TEXT", default=r"nrms.yaml")
+parse.add_argument("--configure", "-c", help="yaml file", dest="config", metavar="FILE", default=r"nrms.yaml")
+parse.add_argument("--device_id", "-d", dest="device_id", metavar="INT", default=0)
+parse.add_argument("--mind_type", "-t", dest="mind_type", metavar="TEXT", default="small")
+parse.add_argument("--model_class", "-m", dest="model_class", metavar="TEXT", default="nrms")
 args = parse.parse_args()
+test_news_file, test_behaviors_file = get_path("test", mind_type=args.mind_type)
+valid_news_file, valid_behaviors_file = get_path("valid", mind_type=args.mind_type)
 start_time = time.time()
-inference_dir = f"{data_path}/prediction"
+inference_dir = os.path.join(get_data_path(args.mind_type), "prediction")
 os.makedirs(inference_dir, exist_ok=True)
 # set trainer
-trainer = load_trainer(args.config)
+trainer = load_trainer(args.config, device_id=int(args.device_id), model_class=args.model_class)
 # load model
-model_path = os.path.join(data_path, "checkpoint", f"best_model.pth")
-state = torch.load(model_path)
+model_path = os.path.join(get_data_path(args.mind_type), "checkpoint", f"best_model.pth")
+state = torch.load(model_path, map_location=trainer.device)
 trainer.model.load_state_dict(state)
 with torch.no_grad():
+    trainer.model.eval()
     # tools.print_log(trainer.run_eval(valid_news_file, valid_behaviors_file))
     group_impr_indexes, group_preds = trainer.run_fast_eval(test_news_file, test_behaviors_file, test_set=True)
 write_prediction(group_impr_indexes, group_preds)
