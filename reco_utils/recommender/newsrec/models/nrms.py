@@ -5,7 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ["NRMSModel"]
+
+__all__ = ["NRMSModel", "TimeDistributed", "AttLayer"]
 
 
 class TimeDistributed(nn.Module):
@@ -35,13 +36,13 @@ class TimeDistributed(nn.Module):
 
 class AttLayer(nn.Module):
 
-    def __init__(self, hparams):
+    def __init__(self, word_emb_dim, attention_hidden_dim):
         super().__init__()
         # build attention network
         self.attention = nn.Sequential(
-            nn.Linear(hparams.word_emb_dim, hparams.attention_hidden_dim),
+            nn.Linear(word_emb_dim, attention_hidden_dim),
             nn.Tanh(),
-            nn.Linear(hparams.attention_hidden_dim, 1),
+            nn.Linear(attention_hidden_dim, 1),
             nn.Flatten(),
             nn.Softmax(dim=-1)
         )
@@ -78,8 +79,8 @@ class NRMSModel(nn.Module):
         self.word2vec_embedding = np.load(hparams.wordEmb_file)
         self.embedding_layer = nn.Embedding(self.word2vec_embedding.shape[0], hparams.word_emb_dim).from_pretrained(
             torch.FloatTensor(self.word2vec_embedding), freeze=False)
-        self.news_att_layer = AttLayer(hparams)
-        self.user_att_layer = AttLayer(hparams)
+        self.news_att_layer = AttLayer(hparams.word_emb_dim, hparams.attention_hidden_dim)
+        self.user_att_layer = AttLayer(hparams.word_emb_dim, hparams.attention_hidden_dim)
         self.news_self_att = nn.MultiheadAttention(hparams.word_emb_dim, hparams.head_num)
         self.user_self_att = nn.MultiheadAttention(hparams.word_emb_dim, hparams.head_num)
 
